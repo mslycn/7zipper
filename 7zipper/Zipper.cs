@@ -1,27 +1,23 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace _7zipper
 {
     class Zipper
     {
-        public string OutputPath;
         public delegate void ZipperProgressUpdate(object sender, ProgressEventArgs e);
         public event ZipperProgressUpdate ProgressState;
 
-        private readonly List<string> _filesList;
+        private readonly List<Tuple<string,string>> _filesList; // Item 1 Path, Item 2 Output
 
-        Zipper()
+        public Zipper()
         {
-            _filesList = new List<string>();
-            // Default path
-            OutputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().GetName().CodeBase);
+            _filesList = new List<Tuple<string, string>>();
         }
 
-        public void AddFile(params string[] files)
+        public void AddFile(params Tuple<string, string>[] files)
         {
             // Add unique file
             foreach (var file in files.Where(file => !_filesList.Contains(file)))
@@ -41,8 +37,7 @@ namespace _7zipper
             foreach (var file in _filesList)
             {
                 ReportProgress(count * 100 / _filesList.Count);
-                var name = Path.GetFileName(file);
-                CompressFileLzma(file, OutputPath + name);
+                CompressFileLzma(file.Item1, file.Item2);
                 count++;
             }
             ReportProgress(100);
@@ -73,7 +68,7 @@ namespace _7zipper
         }
     }
 
-    public class ProgressEventArgs : EventArgs
+    class ProgressEventArgs : EventArgs
     {
         public int Progress { get; private set; }
         public ProgressEventArgs(int progress)
